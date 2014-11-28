@@ -10,6 +10,7 @@ $accent-colour-pale-hoverFocus: #E1EBFD;
 $accent-colour-pale-active: #C8D9F9;
 $shadow-1-z: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
 $shadow-2-z: 0 3px 8px 0 rgba(0, 0, 0, 0.4);
+$focus-time: 0.15s;
 
 body {
   background: $dialog-colour;
@@ -130,9 +131,15 @@ body {
   display: block;
   position: relative;
   border-bottom: 1px solid $inactive-border;
-  height: 32px;
+  height: 64px;
   padding-top: 32px;
-  margin-bottom: 7px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  transition: all $focus-time;
+}
+
+%paperTextFieldBase.paperFocus {
+  border-bottom: 2px solid $accent-colour;
 }
 
 %paperTextFieldLabel {
@@ -140,7 +147,18 @@ body {
   top: 16px;
   left: 0;
   font-size: 12px;
+  line-height: 1em;
   color: $inactive-label;
+  transition: all $focus-time;
+}
+
+%paperTextFieldLabel.paperPlaceholder {
+  top: 40px;
+  font-size: 16px;
+}
+
+.paperFocus > %paperTextFieldLabel {
+  color: $accent-colour;
 }
 
 %paperTextFieldBox {
@@ -163,6 +181,18 @@ body {
   width: 24px;
   height: 24px;
   cursor: pointer;
+}
+.paperTextfield {
+  @extend %paperTextFieldBase;
+}
+
+.paperTextfield > span {
+  @extend %paperTextFieldLabel;
+}
+
+.paperTextfield > input {
+  @extend %paperTextFieldBox;
+  background: none;
 }
 
 .paperOmnibox {

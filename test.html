@@ -9,7 +9,7 @@
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
       body { display: flex; align-items: center; justify-content: center; }
-      body { background: #fafafa; }
+      body { background: #fafafa; font-family: Arial; }
       .sampleRootDlg { width: 25em; max-width: 95%; }
     </style>
   </head>
@@ -19,6 +19,9 @@
       var dlg = paperjs.createDialog();
       dlg._rootElt.classList.add("sampleRootDlg");
 
+      var text = paperjs.createTextfield("Text field");
+      dlg.appendChild(text);
+
       var omnibox = paperjs.createOmnibox("Omnibox entry",
                                             "You can type things in here in very flexible ways");
       omnibox.appendItem("Item 1");
@@ -27,7 +30,7 @@
       omnibox.appendItem("Item 3");
       omnibox.appendItem("Small items", true);
       omnibox.appendItem("Item 4");
-      omnibox.onclick = function() {
+      omnibox.ondisclose = function() {
         console.log("Omnibox clicked");
       };
       omnibox.oneditchange = function() {
@@ -43,6 +46,9 @@
       dlg.appendChild(omnibox);
 
       var combo = paperjs.createCombo("Standard combobox");
+      combo.appendItem("Item 1");
+      combo.appendItem("Item 2");
+      combo.appendItem("Item 3");
       dlg.appendChild(combo);
 
       var buttonBar = paperjs.createButtonBar();
