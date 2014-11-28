@@ -1,19 +1,52 @@
-$inactive-border: grey;
-$inactive-label: grey;
-$hoverFocus-button: #eee;
-$active-button: #cccccc;
+/* This is Google's "Cyan" colour palette */
+$colour-50:  #e0f7fa;
+$colour-100: #b2ebf2;
+$colour-200: #80deea;
+$colour-300: #4dd0e1;
+$colour-400: #26c6da;
+$colour-500: #00bcd4;
+$colour-600: #00acc1;
+$colour-700: #0097a7;
+$colour-800: #00838f;
+$colour-900: #006064;
+
+$colour-error: #f44336;
+$colour-warning: #fb8c00;
+
+/* Google's standard dark-on-light contrasts... */
+$text-dol: #0a0a0a; /* 87% */
+$secondary-text-dol: #757575; /* 54% */
+$hint-text-dol: #a0a0a0; /* 37% */
+$dividers-dol: #e0e0e0; /* 12% */
+/* ... and light-on-dark */
+$text-lod: #ffffff;
+$secondary-text-lod: #b2b2b2; /* 0.7% */
+$hint-text-lod: #4c4c4c; /* 0.3% */
+$dividers-lod: #1e1e1e; /* 0.12% */
+
 $dialog-colour: #fafafa;
-$accent-colour: #4285F4;
-$accent-colour-hoverFocus: $accent-colour * 0.9;
-$accent-colour-active: $accent-colour * 0.75;
-$accent-colour-pale-hoverFocus: #E1EBFD;
-$accent-colour-pale-active: #C8D9F9;
+
+/* text fields, labelled controls... */
+$inactive-border: $dividers-dol;
+$inactive-label: $hint-text-dol;
+$active-border: $colour-500;
+
+/* buttons */
+$button-flat-hover: #e6e6e6; /* 20% + $dialog-colour */
+$button-flat-active: #d3d3d3; /* 40% + $dialog-colour */
+$button-colour-base: $colour-500;
+$button-colour-hover: $colour-600;
+$button-colour-active: $colour-700;
+$button-lightcolour-hover: $colour-50;
+$button-lightcolour-active: $colour-100;
+
 $shadow-1-z: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
 $shadow-2-z: 0 3px 8px 0 rgba(0, 0, 0, 0.4);
+
 $focus-time: 0.15s;
 
 body {
-  background: $dialog-colour;
+  background: white;
 }
 
 %paperElement {
@@ -24,6 +57,20 @@ body {
 .paperDialog {
   @extend %paperElement;
   padding: 24px;
+  background: $dialog-colour;
+  box-shadow: $shadow-1-z;
+}
+
+.paperModal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0, 0.4);
 }
 
 .paperStatus {
@@ -32,13 +79,23 @@ body {
   padding: 10px 0;
 }
 
+.paperParagraph {
+  font-size: 15px;
+  margin: 8px 0;
+}
+
+.paperCheckbox {
+  margin: 16px 0;
+  display: block;
+}
+
 .paperButton {
   box-sizing: content-box;
   border-radius: 3px;
   height: 36px;
   padding: 0 8px;
   margin: 0 0 0 8px;
-  min-width: (64 - 2*8)px;
+  min-width: 70px;
   font-size: 14px;
   outline: 0;
   border: none;
@@ -55,25 +112,25 @@ body {
 
 /* Flat, non-default buttons */
 .paperButton {
-  background: white;
+  background: $dialog-colour;
   color: black;
 }
 .paperButton:hover, .paperButton:focus {
-  background: $hoverFocus-button;
+  background: $button-flat-hover;
 }
 .paperButton:active {
-  background: $active-button;
+  background: $button-flat-active;
 }
 
 /* Flat, default buttons */
 .paperButton.paperDefault {
-  color: $accent-colour;
+  color: $button-colour-base;
 }
 .paperButton.paperDefault:hover, .paperButton.paperDefault:focus {
-  background: $accent-colour-pale-hoverFocus;
+  background: $button-lightcolour-hover;
 }
 .paperButton.paperDefault:active {
-  background: $accent-colour-pale-active;
+  background: $button-lightcolour-active;
 }
 
 /* Raised, non-default buttons */
@@ -87,17 +144,31 @@ body {
 /* Raised, default buttons */
 .paperButton.paperRaised.paperDefault {
   color: white;
-  background: $accent-colour;
+  background: $button-colour-base;
 }
 .paperButton.paperRaised.paperDefault:hover,
 .paperButton.paperRaised.paperDefault:focus {
-  background: $accent-colour-hoverFocus;
+  background: $button-colour-hover;
 }
 .paperButton.paperRaised.paperDefault:active {
-  background: $accent-colour-active;
+  background: $button-colour-active;
 }
 
-.paperButtonBar {
+.paperDialogHeader {
+  margin: -24px -24px 24px -24px;
+  padding: 24px;
+  line-height: 24px;
+  font-size: 18px;
+}
+
+.paperDialogError {
+  background: $colour-error;
+}
+.paperDialogWarning {
+  background: $colour-warning;
+}
+
+.paperDialogFooter {
   padding: ((48px-36)/2) 0;
   height: 36px;
   margin: 16px 0 -8px;
@@ -122,8 +193,12 @@ body {
   margin: 0 -8px;
 }
 
+.paperHeaderItem {
+  font-style: italic;
+}
+
 .paperActive {
-  background: $active-button;
+  background: $button-flat-active;
 }
 
 %paperTextFieldBase {
@@ -135,11 +210,11 @@ body {
   padding-top: 32px;
   margin-bottom: 8px;
   box-sizing: border-box;
-  transition: all $focus-time;
+  transition: border-color $focus-time;
 }
 
 %paperTextFieldBase.paperFocus {
-  border-bottom: 2px solid $accent-colour;
+  border-bottom: 2px solid $active-border;
 }
 
 %paperTextFieldLabel {
@@ -158,7 +233,7 @@ body {
 }
 
 .paperFocus > %paperTextFieldLabel {
-  color: $accent-colour;
+  color: $colour-600;
 }
 
 %paperTextFieldBox {
@@ -217,6 +292,14 @@ body {
   width: 100%;
   top: 72px;
   left: -16px;
+}
+
+.paperOmnibox > div > .paperItem {
+  /* Sorry Google, this isn't what you want me to do, and really, I sympathise
+   * for the poor touchscreen users, but your spacing is just not dense enough
+   * for our omnibox to work. */
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .paperCombo {

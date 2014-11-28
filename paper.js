@@ -5,42 +5,6 @@
     root.paperjs = factory();
 })(this, function() {
   var paperjs = {};
-  var PaperObject = function () {};
-  PaperObject.prototype.dispose = function() {
-    this._disposeEvents();
-    this._disposeChildren();
-  };
-  PaperObject.prototype.focus = function() { this._focusElt.focus(); };
-  PaperObject.prototype.select = function() { this._focusElt.select(); };
-  PaperObject.prototype.appendToNative = function(p) { p.appendChild(this._rootElt); };
-  PaperObject.prototype.appendChild = function(elt) {
-    this._contentElt.appendChild(elt._rootElt);
-    this._children.push(elt);
-  };
-  PaperObject.prototype._rootElt = null;
-  PaperObject.prototype._focusElt = null;
-  PaperObject.prototype._contentElt = null;
-  PaperObject.prototype._children = [];
-  PaperObject.prototype._disposeChildren = function() {
-    for (var i = 0; i < this._children.length; ++i) {
-      var c = this._children[i];
-      this._contentElt.removeChild(c._rootElt);
-      c.dispose();
-    }
-    this._children.length = 0;
-  }
-  PaperObject.prototype._eventHandlers = [];
-  PaperObject.prototype._addEvent = function(target, type, fn) {
-    this._eventHandlers.push({target: target, type: type, fn: fn});
-    target.addEventListener(type, fn, false);
-  }
-  PaperObject.prototype._disposeEvents = function() {
-    for (var i = 0; i < this._eventHandlers.length; ++i) {
-      var e = this._eventHandlers[i];
-      e.target.removeEventListener(e.type, e.fn, false);
-    }
-    this._eventHandlers.length = 0;
-  }
 
   function displayElt(elt, d, optShowType) {
     if (d && optShowType) elt.style.display = optShowType;
@@ -52,16 +16,76 @@
     return window.getComputedStyle(elt, null).display != 'none';
   }
 
+  var PaperObject = function () {};
+  PaperObject.prototype.dispose = function() {
+    this._disposeEvents();
+    this._disposeChildren();
+  };
+  PaperObject.prototype.show = function(s) { displayElt(this._rootElt, s); };
+  PaperObject.prototype.focus = function() { this._focusElt.focus(); };
+  PaperObject.prototype.select = function() { this._focusElt.select(); };
+  PaperObject.prototype.appendToNative = function(p) { p.appendChild(this._rootElt); };
+  PaperObject.prototype.removeFromNative = function(p) { p.removeChild(this._rootElt); };
+  PaperObject.prototype.appendChild = function(elt) {
+    this._contentElt.appendChild(elt._rootElt);
+    if (this._children === null) this._children = [];
+    this._children.push(elt);
+  };
+  PaperObject.prototype.removeChildren = function() { this._disposeChildren(); };
+  PaperObject.prototype._rootElt = null;
+  PaperObject.prototype._focusElt = null;
+  PaperObject.prototype._contentElt = null;
+  PaperObject.prototype._children = null;
+  PaperObject.prototype._disposeChildren = function() {
+    if (this._children === null) return;
+    for (var i = 0; i < this._children.length; ++i) {
+      var c = this._children[i];
+      this._contentElt.removeChild(c._rootElt);
+      c.dispose();
+    }
+    this._children.length = 0;
+  }
+  PaperObject.prototype._eventHandlers = null;
+  PaperObject.prototype._addEvent = function(target, type, fn) {
+    if (this._eventHandlers === null) this._eventHandlers = [];
+    this._eventHandlers.push({target: target, type: type, fn: fn});
+    target.addEventListener(type, fn, false);
+  }
+  PaperObject.prototype._disposeEvents = function() {
+    if (this._eventHandlers === null) return;
+    for (var i = 0; i < this._eventHandlers.length; ++i) {
+      var e = this._eventHandlers[i];
+      e.target.removeEventListener(e.type, e.fn, false);
+    }
+    this._eventHandlers.length = 0;
+  }
+
   var paperArrow = '<svg viewBox="0 0 24 24" height="24px" width="24px" preserveAspectRatio="xMidYMid meet" fit=""><g><path d="M7 10l5 5 5-5z"></path></g></svg>';
 
-  var PaperDlg = function() {
+  var PaperDlg = function(modal) {
     this._rootElt = this._contentElt = document.createElement('div');
     this._rootElt.className = 'paperDialog';
+    this._modal = modal;
+    if (modal) {
+      var sheet = document.createElement('div');
+      sheet.className = 'paperModal';
+      sheet.appendChild(this._rootElt);
+      this._rootElt = sheet;
+      document.body.appendChild(this._rootElt);
+    }
   };
   PaperDlg.prototype = new PaperObject();
-  paperjs.createDialog = function() { return new PaperDlg(); }
+  PaperDlg.prototype.dispose = function() {
+    if (this._modal) document.body.removeChild(this._rootElt);
+    this._disposeEvents();
+    this._disposeChildren();
+  };
+  PaperDlg.prototype.addClass = function(type) {
+    this._contentElt.classList.add(type);
+  };
+  paperjs.createDialog = function(modal) { return new PaperDlg(modal); }
 
-  var PaperTextfield = function(labelText, tipText) {
+  var PaperTextfield = function(labelText, tipText, isPassword) {
     var self = this;
     var field = this._rootElt = document.createElement('div');
     field.className = 'paperTextfield';
@@ -70,7 +94,7 @@
     label.textContent = labelText;
     field.appendChild(label);
     var input = this._focusElt = document.createElement('input');
-    input.type = 'text';
+    input.type = isPassword ? 'password' : 'text';
     if (tipText) input.title = tipText;
     field.appendChild(input);
 
@@ -93,8 +117,10 @@
   };
   PaperTextfield.prototype = new PaperObject();
   PaperTextfield.prototype.onchange = function() {};
-  paperjs.createTextfield = function(labelText, tipText) {
-    return new PaperTextfield(labelText, tipText);
+  PaperTextfield.prototype.setText = function(text) { this._focusElt.value = text; };
+  PaperTextfield.prototype.getText = function() { return this._focusElt.value; };
+  paperjs.createTextfield = function(labelText, tipText, isPassword) {
+    return new PaperTextfield(labelText, tipText, isPassword);
   };
 
   var PaperMenuElementBase = function() {};
@@ -154,6 +180,8 @@
     this._data.push({elt: elt, header: !!header});
   };
   PaperMenuElementBase.prototype.clearItems = function() {
+    for (var i = 0; i < this._data.length; ++i)
+      this._menu.removeChild(this._data[i].elt);
     this._data.length = 0;
     this._active = null;
   };
@@ -218,7 +246,6 @@
     var box = this._rootElt = document.createElement('div');
     box.className = 'paperOmnibox';
     var label = this._label = document.createElement('span');
-    label.className = 'paperPlaceholder';
     label.textContent = labelText;
     box.appendChild(label);
     var input = this._focusElt = document.createElement('input');
@@ -272,6 +299,12 @@
   PaperOmnibox.prototype.oneditchange = function() {};
   PaperOmnibox.prototype.onselectionchange = function() {};
   PaperOmnibox.prototype.deleteCallback = function() { return false /* not handled */; };
+  PaperOmnibox.prototype.activate = function() {
+    this._showMenu(true);
+    this._focusElt.focus();
+  };
+  PaperOmnibox.prototype.setText = function(t) { this._focusElt.value = t; };
+  PaperOmnibox.prototype.getText = function() { return this._focusElt.value; };
   paperjs.createOmnibox = function(labelText, tipText) {
     return new PaperOmnibox(labelText, tipText);
   };
@@ -338,14 +371,8 @@
     });
   };
   PaperCombo.prototype = new PaperMenuElementBase();
+  PaperCombo.prototype.setTip = function(tipText) { this._focusElt.title = tipText; };
   paperjs.createCombo = function(labelText, tipText) { return new PaperCombo(labelText, tipText); };
-
-  var PaperButtonBar = function() {
-    var bar = this._rootElt = this._contentElt = document.createElement('div');
-    bar.className = 'paperButtonBar';
-  };
-  PaperButtonBar.prototype = new PaperObject();
-  paperjs.createButtonBar = function() { return new PaperButtonBar(); }
 
   var PaperButton = function(buttonText, raised, defaulted, tipText) {
     var self = this;
@@ -366,14 +393,78 @@
     return new PaperButton(buttonText, raised, defaulted, tipText);
   };
 
-  var PaperButtonBarStatus = function(statusText) {
+  var PaperDialogHeader = function() {
+    var header = this._rootElt = this._contentElt = document.createElement('div');
+    header.className = 'paperDialogHeader';
+  };
+  PaperDialogHeader.prototype = new PaperObject;
+  PaperDialogHeader.prototype.setText = function(text) { this._contentElt.textContent = text; };
+  PaperDialogHeader.prototype.WARNING = 'paperDialogWarning';
+  PaperDialogHeader.prototype.ERROR = 'paperDialogError';
+  PaperDialogHeader.prototype.setTheme = function(theme) {
+    if (theme == this.WARNING) {
+      this._rootElt.classList.remove(this.ERROR);
+      this._rootElt.classList.add(this.WARNING);
+    } else if (theme == this.ERROR) {
+      this._rootElt.classList.remove(this.WARNING);
+      this._rootElt.classList.add(this.ERROR);
+    }
+  }
+  paperjs.createDialogHeader = function() { return new PaperDialogHeader(); };
+
+  var PaperDialogFooter = function() {
+    var bar = this._rootElt = this._contentElt = document.createElement('div');
+    bar.className = 'paperDialogFooter';
+  };
+  PaperDialogFooter.prototype = new PaperObject();
+  paperjs.createDialogFooter = function() { return new PaperDialogFooter(); }
+
+  var PaperDialogFooterStatus = function(statusText) {
     var text = this._rootElt = document.createElement('div');
     text.className = 'paperStatus';
     text.textContent = statusText;
     return this;
   };
-  PaperButtonBarStatus.prototype = new PaperObject();
-  paperjs.createButtonBarStatus = function(text) { return new PaperButtonBarStatus(text); };
+  PaperDialogFooterStatus.prototype = new PaperObject();
+  PaperDialogFooterStatus.prototype.setText = function(t) { this._rootElt.textContent = t; };
+  paperjs.createDialogFooterStatus = function(text) { return new PaperDialogFooterStatus(text); };
+
+  var PaperCheckbox = function(labelText) {
+    var label = this._rootElt = document.createElement('label');
+    label.className = 'paperCheckbox';
+    var check = this._focusElt = document.createElement('input');
+    check.type = 'checkbox';
+    label.appendChild(check);
+    label.appendChild(document.createTextNode(labelText));
+  };
+  PaperCheckbox.prototype = new PaperObject();
+  PaperCheckbox.prototype.isChecked = function() { return this._focusElt.checked; };
+  paperjs.createCheckbox = function(text) { return new PaperCheckbox(text); };
+
+  var PaperParagraph = function(text) {
+    var p = this._rootElt = document.createElement('p');
+    p.className = 'paperParagraph';
+  };
+  PaperParagraph.prototype = new PaperObject;
+  PaperParagraph.prototype.setText = function(text) { this._rootElt.textContent = text; };
+  paperjs.createParagraph = function(text) { return new PaperParagraph(text); };
+
+  var PaperLabelledStatic = function(text, label) {
+    var xxx = this._rootElt = document.createElement('div');
+    xxx.textContent = label + " " + text;
+    this._xxx_label = label;
+  };
+  PaperLabelledStatic.prototype = new PaperObject;
+  PaperLabelledStatic.prototype.setText = function(text) {
+    this._rootElt.textContent = this._xxx_label + " " + text;
+  };
+  paperjs.createLabelledStatic = function(text, label) { return new PaperLabelledStatic(text, label); };
+
+  var PaperContainer = function() {
+    this._rootElt = this._contentElt = document.createElement('div');
+  };
+  PaperContainer.prototype = new PaperObject;
+  paperjs.createContainer = function() { return new PaperContainer(); };
 
   return paperjs;
 });
