@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="paper.css" />
+    <title>Paper test</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+      body { display: flex; align-items: center; justify-content: center; }
+      body { background: #fafafa; }
+      .sampleRootDlg { width: 25em; max-width: 95%; }
+    </style>
+  </head>
+  <body>
+    <script src="paper.js"></script>
+    <script>
+      var dlg = paperjs.createDialog();
+      dlg._rootElt.classList.add("sampleRootDlg");
+
+      var omnibox = paperjs.createOmnibox("Omnibox entry",
+                                            "You can type things in here in very flexible ways");
+      omnibox.appendItem("Item 1");
+      omnibox.appendItem("Big items", true);
+      omnibox.appendItem("Item 2");
+      omnibox.appendItem("Item 3");
+      omnibox.appendItem("Small items", true);
+      omnibox.appendItem("Item 4");
+      omnibox.onclick = function() {
+        console.log("Omnibox clicked");
+      };
+      omnibox.oneditchange = function() {
+        console.log("Omnibox edit changed");
+      };
+      omnibox.onselectionchange = function() {
+        console.log("Omnibox selection changed");
+      };
+      omnibox.deleteCallback = function() {
+        console.log("Prompting to delete item");
+        return false;
+      };
+      dlg.appendChild(omnibox);
+
+      var combo = paperjs.createCombo("Standard combobox");
+      dlg.appendChild(combo);
+
+      var buttonBar = paperjs.createButtonBar();
+      dlg.appendChild(buttonBar);
+      var statusItem = paperjs.createButtonBarStatus('Working...');
+      buttonBar.appendChild(statusItem);
+      var ok = paperjs.createButton("OK", true, true, "Click to continue");
+      var stop = paperjs.createButton("Cancel", true);
+      ok.onclick = stop.onclick = function() {
+        console.log("Button clicked");
+      };
+      buttonBar.appendChild(stop);
+      buttonBar.appendChild(ok);
+      dlg.appendChild(buttonBar);
+
+      dlg.appendToNative(document.body);
+    </script>
+  </body>
+</html>

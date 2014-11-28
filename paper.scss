@@ -1,0 +1,215 @@
+$inactive-border: grey;
+$inactive-label: grey;
+$hoverFocus-button: #eee;
+$active-button: #cccccc;
+$dialog-colour: #fafafa;
+$accent-colour: #4285F4;
+$accent-colour-hoverFocus: $accent-colour * 0.9;
+$accent-colour-active: $accent-colour * 0.75;
+$accent-colour-pale-hoverFocus: #E1EBFD;
+$accent-colour-pale-active: #C8D9F9;
+$shadow-1-z: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+$shadow-2-z: 0 3px 8px 0 rgba(0, 0, 0, 0.4);
+
+body {
+  background: $dialog-colour;
+}
+
+%paperElement {
+  font-size: 16px;
+  line-height: 16px;
+}
+
+.paperDialog {
+  @extend %paperElement;
+  padding: 24px;
+}
+
+.paperStatus {
+  display: inline-block;
+  height: 16px;
+  padding: 10px 0;
+}
+
+.paperButton {
+  box-sizing: content-box;
+  border-radius: 3px;
+  height: 36px;
+  padding: 0 8px;
+  margin: 0 0 0 8px;
+  min-width: (64 - 2*8)px;
+  font-size: 14px;
+  outline: 0;
+  border: none;
+  text-transform: uppercase;
+  transition: color 0.5s, background-color 0.5s, box-shadow 0.5s;
+}
+
+.paperRaised {
+  box-shadow: $shadow-1-z;
+}
+.paperRaised:active, .paperRaised:focus {
+  box-shadow: $shadow-2-z;
+}
+
+/* Flat, non-default buttons */
+.paperButton {
+  background: white;
+  color: black;
+}
+.paperButton:hover, .paperButton:focus {
+  background: $hoverFocus-button;
+}
+.paperButton:active {
+  background: $active-button;
+}
+
+/* Flat, default buttons */
+.paperButton.paperDefault {
+  color: $accent-colour;
+}
+.paperButton.paperDefault:hover, .paperButton.paperDefault:focus {
+  background: $accent-colour-pale-hoverFocus;
+}
+.paperButton.paperDefault:active {
+  background: $accent-colour-pale-active;
+}
+
+/* Raised, non-default buttons */
+.paperButton.paperRaised {
+}
+.paperButton.paperRaised:hover, .paperButton.paperRaised:focus {
+}
+.paperButton.paperRaised:active {
+}
+
+/* Raised, default buttons */
+.paperButton.paperRaised.paperDefault {
+  color: white;
+  background: $accent-colour;
+}
+.paperButton.paperRaised.paperDefault:hover,
+.paperButton.paperRaised.paperDefault:focus {
+  background: $accent-colour-hoverFocus;
+}
+.paperButton.paperRaised.paperDefault:active {
+  background: $accent-colour-active;
+}
+
+.paperButtonBar {
+  padding: ((48px-36)/2) 0;
+  height: 36px;
+  margin: 16px 0 -8px;
+  text-align: right;
+  /* Paper has the buttons sticking out into the right margin a bit but I find
+   * this ugly... */
+  /* margin-right: 16px - 24; */
+}
+
+.paperMenu {
+  @extend %paperElement;
+  padding: 8px 16px;
+  box-shadow: $shadow-1-z;
+  z-index: 1;
+  background: white;
+  display: none;
+}
+
+.paperItem {
+  height: 16px;
+  padding: 16px 8px;
+  margin: 0 -8px;
+}
+
+.paperActive {
+  background: $active-button;
+}
+
+%paperTextFieldBase {
+  @extend %paperElement;
+  display: block;
+  position: relative;
+  border-bottom: 1px solid $inactive-border;
+  height: 32px;
+  padding-top: 32px;
+  margin-bottom: 7px;
+}
+
+%paperTextFieldLabel {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  font-size: 12px;
+  color: $inactive-label;
+}
+
+%paperTextFieldBox {
+  padding: 0;
+  margin: 0;
+  border: none;
+  height: 32px;
+  outline: none;
+  padding: 8px 32px 8px 0;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+%paperTextFieldExpander {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  display: block;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.paperOmnibox {
+  @extend %paperTextFieldBase;
+}
+
+.paperOmnibox > span {
+  @extend %paperTextFieldLabel;
+}
+
+.paperOmnibox > input {
+  @extend %paperTextFieldBox;
+  background: none;
+}
+
+.paperOmnibox > .paperExpander {
+  @extend %paperTextFieldExpander;
+}
+
+.paperOmnibox > .paperMenu {
+  position: absolute;
+  width: 100%;
+  top: 72px;
+  left: -16px;
+}
+
+.paperCombo {
+  @extend %paperTextFieldBase;
+}
+
+.paperCombo > span {
+  @extend %paperTextFieldLabel;
+}
+
+.paperCombo > .paperComboValue {
+  @extend %paperTextFieldBox;
+  cursor: pointer;
+}
+
+.paperCombo > .paperExpander {
+  @extend %paperTextFieldExpander;
+}
+
+.paperCombo > .paperMenu {
+  position: absolute;
+  width: 100%;
+  top: 16px;
+  left: -16px;
+}
+
