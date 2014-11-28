@@ -1,0 +1,15 @@
+{
+  "name": "paperjs",
+  "version": "0.0.1",
+  "homepage": "https://github.com/NWilson/paperjs",
+  "authors": [
+    "Nicholas Wilson <nicholas.wilson@realvnc.com>"
+  ],
+  "description": "A very simple, lightweight implementation of a few Material Design components",
+  "main": "paper.js",
+  "keywords": [
+    "paper",
+    "material"
+  ],
+  "private": true
+}
