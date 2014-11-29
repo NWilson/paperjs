@@ -16,7 +16,13 @@
     return window.getComputedStyle(elt, null).display != 'none';
   }
 
-  var PaperObject = function () {};
+  var PaperObject = function () {
+    this._children = [];
+    this._eventHandlers = [];
+    this._rootElt = null;
+    this._focusElt = null;
+    this._contentElt = null;
+  };
   PaperObject.prototype.dispose = function() {
     this._disposeEvents();
     this._disposeChildren();
@@ -28,16 +34,10 @@
   PaperObject.prototype.removeFromNative = function(p) { p.removeChild(this._rootElt); };
   PaperObject.prototype.appendChild = function(elt) {
     this._contentElt.appendChild(elt._rootElt);
-    if (this._children === null) this._children = [];
     this._children.push(elt);
   };
   PaperObject.prototype.removeChildren = function() { this._disposeChildren(); };
-  PaperObject.prototype._rootElt = null;
-  PaperObject.prototype._focusElt = null;
-  PaperObject.prototype._contentElt = null;
-  PaperObject.prototype._children = null;
   PaperObject.prototype._disposeChildren = function() {
-    if (this._children === null) return;
     for (var i = 0; i < this._children.length; ++i) {
       var c = this._children[i];
       this._contentElt.removeChild(c._rootElt);
@@ -45,14 +45,11 @@
     }
     this._children.length = 0;
   }
-  PaperObject.prototype._eventHandlers = null;
   PaperObject.prototype._addEvent = function(target, type, fn) {
-    if (this._eventHandlers === null) this._eventHandlers = [];
     this._eventHandlers.push({target: target, type: type, fn: fn});
     target.addEventListener(type, fn, false);
   }
   PaperObject.prototype._disposeEvents = function() {
-    if (this._eventHandlers === null) return;
     for (var i = 0; i < this._eventHandlers.length; ++i) {
       var e = this._eventHandlers[i];
       e.target.removeEventListener(e.type, e.fn, false);
@@ -63,6 +60,7 @@
   var paperArrow = '<svg viewBox="0 0 24 24" height="24px" width="24px" preserveAspectRatio="xMidYMid meet" fit=""><g><path d="M7 10l5 5 5-5z"></path></g></svg>';
 
   var PaperDlg = function(modal) {
+    PaperObject.call(this);
     this._rootElt = this._contentElt = document.createElement('div');
     this._rootElt.className = 'paperDialog';
     this._modal = modal;
@@ -74,11 +72,10 @@
       document.body.appendChild(this._rootElt);
     }
   };
-  PaperDlg.prototype = new PaperObject();
+  PaperDlg.prototype = Object.create(PaperObject.prototype);
   PaperDlg.prototype.dispose = function() {
     if (this._modal) document.body.removeChild(this._rootElt);
-    this._disposeEvents();
-    this._disposeChildren();
+    PaperObject.prototype.dispose.call(this);
   };
   PaperDlg.prototype.addClass = function(type) {
     this._contentElt.classList.add(type);
@@ -86,6 +83,7 @@
   paperjs.createDialog = function(modal) { return new PaperDlg(modal); }
 
   var PaperTextfield = function(labelText, tipText, isPassword) {
+    PaperObject.call(this);
     var self = this;
     var field = this._rootElt = document.createElement('div');
     field.className = 'paperTextfield';
@@ -115,7 +113,7 @@
       self.onchange();
     });
   };
-  PaperTextfield.prototype = new PaperObject();
+  PaperTextfield.prototype = Object.create(PaperObject.prototype);
   PaperTextfield.prototype.onchange = function() {};
   PaperTextfield.prototype.setText = function(text) { this._focusElt.value = text; };
   PaperTextfield.prototype.getText = function() { return this._focusElt.value; };
@@ -123,8 +121,10 @@
     return new PaperTextfield(labelText, tipText, isPassword);
   };
 
-  var PaperMenuElementBase = function() {};
-  PaperMenuElementBase.prototype = new PaperObject();
+  var PaperMenuElementBase = function() {
+    PaperObject.call(this);
+  };
+  PaperMenuElementBase.prototype = Object.create(PaperObject.prototype);
   PaperMenuElementBase.prototype._initMenuElementBase = function() {
     var self = this;
     var menu = this._menu = document.createElement('div');
@@ -242,6 +242,7 @@
   };
 
   var PaperOmnibox = function(labelText, tipText) {
+    PaperMenuElementBase.call(this);
     var self = this;
     var box = this._rootElt = document.createElement('div');
     box.className = 'paperOmnibox';
@@ -294,7 +295,7 @@
       self._label.classList.remove('paperPlaceholder');
     });
   };
-  PaperOmnibox.prototype = new PaperMenuElementBase();
+  PaperOmnibox.prototype = Object.create(PaperMenuElementBase.prototype);
   PaperOmnibox.prototype.ondisclose = function() {};
   PaperOmnibox.prototype.oneditchange = function() {};
   PaperOmnibox.prototype.onselectionchange = function() {};
@@ -310,6 +311,7 @@
   };
 
   var PaperCombo = function(labelText, tipText) {
+    PaperMenuElementBase.call(this);
     var self = this;
     var combo = this._rootElt = document.createElement('div');
     combo.className = 'paperCombo';
@@ -370,11 +372,12 @@
       self._showMenu(true);
     });
   };
-  PaperCombo.prototype = new PaperMenuElementBase();
+  PaperCombo.prototype = Object.create(PaperMenuElementBase.prototype);
   PaperCombo.prototype.setTip = function(tipText) { this._focusElt.title = tipText; };
   paperjs.createCombo = function(labelText, tipText) { return new PaperCombo(labelText, tipText); };
 
   var PaperButton = function(buttonText, raised, defaulted, tipText) {
+    PaperObject.call(this);
     var self = this;
     var button = this._rootElt = document.createElement('button');
     button.className = 'paperButton';
@@ -387,17 +390,18 @@
       self.onclick();
     });
   };
-  PaperButton.prototype = new PaperObject();
+  PaperButton.prototype = Object.create(PaperObject.prototype);
   PaperButton.prototype.onclick = function() {};
   paperjs.createButton = function(buttonText, raised, defaulted, tipText) {
     return new PaperButton(buttonText, raised, defaulted, tipText);
   };
 
   var PaperDialogHeader = function() {
+    PaperObject.call(this);
     var header = this._rootElt = this._contentElt = document.createElement('div');
     header.className = 'paperDialogHeader';
   };
-  PaperDialogHeader.prototype = new PaperObject;
+  PaperDialogHeader.prototype = Object.create(PaperObject.prototype);
   PaperDialogHeader.prototype.setText = function(text) { this._contentElt.textContent = text; };
   PaperDialogHeader.prototype.WARNING = 'paperDialogWarning';
   PaperDialogHeader.prototype.ERROR = 'paperDialogError';
@@ -413,23 +417,25 @@
   paperjs.createDialogHeader = function() { return new PaperDialogHeader(); };
 
   var PaperDialogFooter = function() {
+    PaperObject.call(this);
     var bar = this._rootElt = this._contentElt = document.createElement('div');
     bar.className = 'paperDialogFooter';
   };
-  PaperDialogFooter.prototype = new PaperObject();
+  PaperDialogFooter.prototype = Object.create(PaperObject.prototype);
   paperjs.createDialogFooter = function() { return new PaperDialogFooter(); }
 
   var PaperDialogFooterStatus = function(statusText) {
+    PaperObject.call(this);
     var text = this._rootElt = document.createElement('div');
     text.className = 'paperStatus';
     text.textContent = statusText;
-    return this;
   };
-  PaperDialogFooterStatus.prototype = new PaperObject();
+  PaperDialogFooterStatus.prototype = Object.create(PaperObject.prototype);
   PaperDialogFooterStatus.prototype.setText = function(t) { this._rootElt.textContent = t; };
   paperjs.createDialogFooterStatus = function(text) { return new PaperDialogFooterStatus(text); };
 
   var PaperCheckbox = function(labelText) {
+    PaperObject.call(this);
     var label = this._rootElt = document.createElement('label');
     label.className = 'paperCheckbox';
     var check = this._focusElt = document.createElement('input');
@@ -437,33 +443,36 @@
     label.appendChild(check);
     label.appendChild(document.createTextNode(labelText));
   };
-  PaperCheckbox.prototype = new PaperObject();
+  PaperCheckbox.prototype = Object.create(PaperObject.prototype);
   PaperCheckbox.prototype.isChecked = function() { return this._focusElt.checked; };
   paperjs.createCheckbox = function(text) { return new PaperCheckbox(text); };
 
   var PaperParagraph = function(text) {
+    PaperObject.call(this);
     var p = this._rootElt = document.createElement('p');
     p.className = 'paperParagraph';
   };
-  PaperParagraph.prototype = new PaperObject;
+  PaperParagraph.prototype = Object.create(PaperObject.prototype);
   PaperParagraph.prototype.setText = function(text) { this._rootElt.textContent = text; };
   paperjs.createParagraph = function(text) { return new PaperParagraph(text); };
 
   var PaperLabelledStatic = function(text, label) {
+    PaperObject.call(this);
     var xxx = this._rootElt = document.createElement('div');
     xxx.textContent = label + " " + text;
     this._xxx_label = label;
   };
-  PaperLabelledStatic.prototype = new PaperObject;
+  PaperLabelledStatic.prototype = Object.create(PaperObject.prototype);
   PaperLabelledStatic.prototype.setText = function(text) {
     this._rootElt.textContent = this._xxx_label + " " + text;
   };
   paperjs.createLabelledStatic = function(text, label) { return new PaperLabelledStatic(text, label); };
 
   var PaperContainer = function() {
+    PaperObject.call(this);
     this._rootElt = this._contentElt = document.createElement('div');
   };
-  PaperContainer.prototype = new PaperObject;
+  PaperContainer.prototype = Object.create(PaperObject.prototype);
   paperjs.createContainer = function() { return new PaperContainer(); };
 
   return paperjs;

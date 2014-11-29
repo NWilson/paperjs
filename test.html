@@ -51,9 +51,9 @@
       combo.appendItem("Item 3");
       dlg.appendChild(combo);
 
-      var buttonBar = paperjs.createButtonBar();
+      var buttonBar = paperjs.createDialogFooter();
       dlg.appendChild(buttonBar);
-      var statusItem = paperjs.createButtonBarStatus('Working...');
+      var statusItem = paperjs.createDialogFooterStatus('Working...');
       buttonBar.appendChild(statusItem);
       var ok = paperjs.createButton("OK", true, true, "Click to continue");
       var stop = paperjs.createButton("Cancel", true);
